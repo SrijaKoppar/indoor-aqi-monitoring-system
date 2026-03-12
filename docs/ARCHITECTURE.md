@@ -1,0 +1,420 @@
+# React + FastAPI Architecture
+
+## System Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         React Frontend                          │
+│              (Next.js 15 @ localhost:3000)                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │               Dashboard Components                      │  │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │  │
+│  │  │ Status   │ │Prediction│ │Metrics   │ │Recommend │  │  │
+│  │  │ Cards    │ │Card      │ │Card      │ │-ations   │  │  │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │  │
+│  │                                                         │  │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐  │  │
+│  │  │Time      │ │Scatter   │ │Feature   │ │Category  │  │  │
+│  │  │Series    │ │Plot      │ │Importance│ │Distrib   │  │  │
+│  │  │Chart     │ │Chart     │ │Chart     │ │Chart     │  │  │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘  │  │
+│  └─────────────────────────────────────────────────────────┘  │
+│                             ▲                                   │
+│                             │ HTTP/JSON                         │
+│         ┌───────────────────┴──────────────────┐               │
+│         │     API Client (api-client.ts)       │               │
+│         └───────────────────┬──────────────────┘               │
+│                             │                                   │
+│  ┌──────────────────────────┴─────────────────────────────┐   │
+│  │    Error Handling & Fallback                          │   │
+│  │    - Check if backend available                       │   │
+│  │    - Fall back to mock data if unavailable            │   │
+│  └──────────────────────────┬─────────────────────────────┘   │
+│                             │                                   │
+└─────────────────────────────┼─────────────────────────────────┘
+                              │
+                              │ HTTP/JSON
+                              │
+┌─────────────────────────────▼─────────────────────────────────┐
+│                    FastAPI Backend                            │
+│              (Python @ localhost:8000)                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              FastAPI Routes (main.py)                   │ │
+│  │  ┌─────────────┐ ┌─────────────┐ ┌──────────────────┐ │ │
+│  │  │  GET /     │ │  GET /health│ │ POST /api/predict│ │ │
+│  │  │ (root)     │ │             │ │                  │ │ │
+│  │  └─────────────┘ └─────────────┘ └──────────────────┘ │ │
+│  │  ┌─────────────────────┐ ┌──────────────────────────┐ │ │
+│  │  │ GET /api/metrics    │ │ GET /api/historical    │ │ │
+│  │  └─────────────────────┘ └──────────────────────────┘ │ │
+│  │  ┌──────────────────────────────────────────────────┐ │ │
+│  │  │ GET /api/recommendations?aqi_category=Moderate  │ │ │
+│  │  └──────────────────────────────────────────────────┘ │ │
+│  └─────────────────────────────────────────────────────────┘ │
+│                             │                                 │
+│         ┌───────────────────┴─────────────────────┐           │
+│         │  Request Validation (schemas.py)        │           │
+│         │  - PredictionRequest                    │           │
+│         │  - PredictionResponse                   │           │
+│         │  - MetricsResponse                      │           │
+│         │  - HistoricalDataResponse               │           │
+│         └───────────────────┬─────────────────────┘           │
+│                             │                                 │
+│         ┌───────────────────▼─────────────────────┐           │
+│         │  Model Loader (model_loader.py)         │           │
+│         │  ┌──────────────────────────────────┐   │           │
+│         │  │ Load Pre-trained Models:         │   │           │
+│         │  │ - xgb_model.pkl                  │   │           │
+│         │  │ - rf_model.pkl                   │   │           │
+│         │  │ - label_encoder.pkl              │   │           │
+│         │  └──────────────────────────────────┘   │           │
+│         └───────────────────┬─────────────────────┘           │
+│                             │                                 │
+└─────────────────────────────┼─────────────────────────────────┘
+                              │
+          ┌───────────────────┴───────────────────┐
+          │                                       │
+┌─────────▼──────────┐              ┌────────────▼─────────┐
+│   XGBoost Model    │              │ Random Forest Model  │
+│  (CO Regressor)    │              │ (AQI Classifier)    │
+├────────────────────┤              ├──────────────────────┤
+│                    │              │                      │
+│ Input: 22 features │              │ Input: 6 features    │
+│ Output: CO conc.   │              │ Output: Category     │
+│                    │              │                      │
+│ Trained on:        │              │ Trained on:          │
+│ - 800 samples      │              │ - Training set       │
+│ - Historical CO    │              │                      │
+│ - Lag features     │              │ Categories:          │
+│ - Rolling means    │              │ - Good (≤2)          │
+│ - Hour of day      │              │ - Moderate (2-5)     │
+│                    │              │ - Unhealthy (5-10)   │
+│ Performance:       │              │ - Hazardous (>10)    │
+│ - R² = 0.89        │              │                      │
+│ - MAE = 0.42       │              │ Performance:         │
+│ - RMSE = 0.68      │              │ - Accuracy = 93%     │
+│                    │              │                      │
+│ Features:          │              │ Features:            │
+│ 1. CO_lag1 (23%)   │              │ Top 5:               │
+│ 2. hour (14%)      │              │ - NOx(GT)            │
+│ 3. CO_rollmean3    │              │ - NO2(GT)            │
+│ 4. NOx_lag1 (6.5%) │              │ - Temperature        │
+│ 5. NOx_lag3 (3.5%) │              │ - Humidity           │
+│ ...15 total        │              │ - PT08.S1(CO)        │
+│                    │              │                      │
+└────────────────────┘              └──────────────────────┘
+```
+
+## Data Flow
+
+### 1. Prediction Request Flow
+
+```
+User Input (Sensor Readings)
+            ▼
+┌─────────────────────────────┐
+│ Frontend Input Validation    │
+│ (TypeScript types)           │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ API Client                   │
+│ (api-client.ts)              │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ HTTP POST /api/predict       │
+│ Content-Type: application/json
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ Backend Route Handler        │
+│ (main.py)                    │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ Pydantic Validation          │
+│ (schemas.py)                 │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ Feature Preparation          │
+│ (model_loader.py)            │
+│ - Current values             │
+│ - Lag features (simulated)   │
+│ - Rolling means (simulated)  │
+│ - Hour of day                │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ XGBoost Prediction           │
+│ (xgb_model.pkl)              │
+│ Output: CO_next_hour         │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ AQI Classification           │
+│ (Random Forest or rules)     │
+│ Output: AQI Category         │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ Response Building            │
+│ (PredictionResponse)         │
+│ - CO prediction              │
+│ - Confidence score           │
+│ - Feature importance         │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ JSON Response                │
+│ HTTP 200 OK                  │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ Frontend Receives Response    │
+│ (api-client.ts)              │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ State Update                 │
+│ (React setState)             │
+└────────────┬────────────────┘
+             ▼
+┌─────────────────────────────┐
+│ Component Re-render          │
+│ Display Updated Values       │
+│ - Prediction card            │
+│ - Charts                     │
+│ - Recommendations            │
+└────────────┬────────────────┘
+             ▼
+        UI Updated
+```
+
+## Error Handling & Fallback
+
+```
+┌──────────────────┐
+│ API Client Call  │
+└────────┬─────────┘
+         │
+    ┌────▼────┐
+    │ Success? │
+    └────┬─────┘
+         │
+    ┌────▼─────────────────┐
+    │ Yes              No  │
+    │                      │
+    ▼                      ▼
+┌─────────────┐   ┌──────────────────────┐
+│ Display     │   │ Try Next Endpoint    │
+│ Real Data   │   └──────────┬───────────┘
+└─────────────┘              │
+                         ┌────▼─────────────┐
+                         │ All Failed?       │
+                         └────┬──────────────┘
+                              │
+                          ┌───▼──┐
+                          │ Yes  │
+                          └──┬───┘
+                             ▼
+                    ┌──────────────────┐
+                    │ Use Mock Data    │
+                    │ (mock-data.ts)   │
+                    └──────────────────┘
+```
+
+## File Dependencies
+
+```
+app/page.tsx
+    ├── imports: api-client.ts
+    ├── imports: mock-data.ts
+    └── imports: components/dashboard/*
+        ├── status-card.tsx
+        ├── prediction-card.tsx
+        ├── metrics-card.tsx
+        ├── co-timeseries-chart.tsx
+        │   └── imports: Recharts
+        ├── scatter-plot-chart.tsx
+        │   └── imports: Recharts
+        ├── feature-importance-chart.tsx
+        │   └── imports: Recharts
+        └── category-distribution-chart.tsx
+            └── imports: Recharts
+
+lib/api-client.ts
+    ├── fetch() → http://localhost:8000/api/*
+    ├── fallback: mock-data.ts functions
+    └── returns: PredictionResponse, MetricsResponse, etc.
+
+backend/main.py
+    ├── imports: schemas.py (Pydantic models)
+    ├── imports: model_loader.py
+    └── routes:
+        ├── POST /api/predict
+        ├── GET /api/metrics
+        ├── GET /api/historical
+        └── GET /api/recommendations
+
+backend/model_loader.py
+    ├── loads: models/models_pickle/xgb_model.pkl
+    ├── loads: models/models_pickle/rf_model.pkl
+    ├── loads: models/models_pickle/label_encoder.pkl
+    └── methods:
+        ├── predict_co(features)
+        ├── classify_aqi(co_value)
+        └── get_feature_importance()
+```
+
+## Development Environment Setup
+
+```
+┌─────────────────────────────────────────┐
+│ Developer Machine                       │
+├─────────────────────────────────────────┤
+│                                         │
+│  Terminal 1:                            │
+│  pnpm install                           │
+│  pnpm dev                               │
+│  → http://localhost:3000 (Hot reload)   │
+│                                         │
+│  Terminal 2:                            │
+│  cd backend                             │
+│  python -m venv venv                    │
+│  source venv/bin/activate               │
+│  pip install -r requirements.txt        │
+│  uvicorn main:app --reload              │
+│  → http://localhost:8000 (Auto reload)  │
+│                                         │
+│  Browser:                               │
+│  http://localhost:3000 (Frontend)       │
+│  http://localhost:8000/docs (API)       │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+## Production Deployment
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  Production Infrastructure              │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ Frontend (Vercel)                                │  │
+│  │ • Next.js 15 Deployed                            │  │
+│  │ • Environment: NEXT_PUBLIC_API_URL               │  │
+│  │ • CDN: Global Edge Network                       │  │
+│  │ • Auto-deploy on git push                        │  │
+│  │ • URL: https://yourdomain.vercel.app             │  │
+│  └──────────────────────────────────────────────────┘  │
+│                         │                               │
+│                   HTTPS │ JSON/REST                     │
+│                         │                               │
+│  ┌──────────────────────▼──────────────────────────┐  │
+│  │ Backend (Railway/Render/AWS)                    │  │
+│  │ • FastAPI Deployed                              │  │
+│  │ • Environment: LOG_LEVEL, MODEL_DIR             │  │
+│  │ • Auto-scaling as needed                        │  │
+│  │ • URL: https://api.yourdomain.com               │  │
+│  │                                                  │  │
+│  │ ┌──────────────────────────────────────────┐   │  │
+│  │ │ ML Models (models_pickle/)               │   │  │
+│  │ │ • xgb_model.pkl (XGBoost)                │   │  │
+│  │ │ • rf_model.pkl (Random Forest)           │   │  │
+│  │ │ • label_encoder.pkl                      │   │  │
+│  │ │                                          │   │  │
+│  │ │ Volume-mounted or uploaded               │   │  │
+│  │ └──────────────────────────────────────────┘   │  │
+│  └──────────────────────────────────────────────────┘  │
+│                         │                               │
+│                Optional │ Database                      │
+│                         │                               │
+│  ┌──────────────────────▼──────────────────────────┐  │
+│  │ Database (Optional - PostgreSQL/MongoDB)       │  │
+│  │ • Store historical predictions                  │  │
+│  │ • Store sensor readings                         │  │
+│  │ • Store user preferences                        │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+## Key Design Decisions
+
+### 1. Frontend-Backend Separation
+- ✅ Frontend (React) handles UI and visualization
+- ✅ Backend (FastAPI) handles ML inference
+- ✅ Clean separation of concerns
+- ✅ Easy to scale independently
+
+### 2. Graceful Degradation
+- ✅ Frontend works with or without backend
+- ✅ Automatic fallback to mock data
+- ✅ Perfect for development and testing
+- ✅ Users see data even if backend is down
+
+### 3. Model Management
+- ✅ Models stored as pickle files
+- ✅ Loaded once at backend startup
+- ✅ Easy to update models without restart (with handler)
+- ✅ Multiple models supported (XGBoost + Random Forest)
+
+### 4. Type Safety
+- ✅ Full TypeScript in frontend
+- ✅ Pydantic validation in backend
+- ✅ Shared type definitions (across boundaries)
+- ✅ API documentation auto-generated
+
+### 5. CORS Configuration
+- ✅ Configured for local development
+- ✅ Easy to update for production
+- ✅ Secure by default (whitelist approach)
+
+## Performance Considerations
+
+1. **Frontend**
+   - Recharts for efficient chart rendering
+   - Component memoization
+   - Lazy loading of heavy components
+
+2. **Backend**
+   - Model loaded once in memory
+   - Fast inference (XGBoost < 100ms)
+   - Connection pooling for database (if added)
+
+3. **Network**
+   - Minimal JSON payloads
+   - Compression with gzip
+   - CDN for frontend (Vercel)
+
+## Security Considerations
+
+1. **Frontend**
+   - Environment variables for API URL
+   - No sensitive data in code
+   - CORS protection
+
+2. **Backend**
+   - Input validation (Pydantic)
+   - CORS configured
+   - Error handling (no stack traces in production)
+   - Add authentication as needed (JWT, OAuth)
+
+3. **Models**
+   - Pickle files treated as trusted code
+   - Consider model versioning
+   - Monitor model drift
+
+---
+
+For implementation details, see:
+- **README_REACT_FASTAPI.md** - Project overview
+- **FASTAPI_SETUP.md** - Backend setup
+- **COMPONENTS.md** - Component details
