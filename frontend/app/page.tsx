@@ -110,7 +110,7 @@ export default function Dashboard() {
 
   if (!sensorData || !prediction || !metrics) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-850 to-slate-900 flex items-center justify-center">
         <div className="text-center">
           <div className="h-12 w-12 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin mx-auto mb-4"></div>
           <p className="text-slate-400">Loading air quality data...</p>
@@ -120,12 +120,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-slate-0">
       {/* Sticky Header */}
       <div className="border-b border-slate-800 bg-gradient-to-r from-slate-900 to-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <h1 className="text-2xl font-bold text-white tracking-tight">
                 Indoor Air Quality Monitor
               </h1>
@@ -133,7 +133,7 @@ export default function Dashboard() {
                 Living Room • Device AQI-01 • Real-time environmental monitoring
               </p>
             </div>
-            <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-semibold ${
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${
               backendAvailable
                 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                 : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
@@ -145,33 +145,42 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Section 1: Air Quality Status (Primary Focus) */}
-        <section className="space-y-4">
-          <div className="space-y-1">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        {/* Section 1: Air Quality Status - Premium Focus */}
+        <div className="mb-6">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-white">Air Quality Status</h2>
-            <p className="text-xs text-slate-400">Current classification and sensor overview</p>
           </div>
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <AQIStatusCard category={prediction.category} confidence={prediction.confidence} />
             </div>
-            <div className="space-y-6">
-              <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-6 shadow-lg">
+            <div className="space-y-5">
+              <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-5 shadow-lg">
                 <AQIGauge category={prediction.category} confidence={prediction.confidence} />
               </div>
-              <SystemStatus backendAvailable={backendAvailable} lastUpdate={lastUpdate} />
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* Section 2: Current Measurements */}
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-white">Current Measurements</h2>
-            <p className="text-xs text-slate-400">Real-time sensor readings</p>
+        {/* Section 2: Forecast & Prediction */}
+        <div className="mb-6">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-white">Forecast & Prediction</h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <PredictionCard prediction={prediction} currentCO={sensorData.co} />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Current Measurements */}
+        <div className="mb-6">
+          <div className="mb-4">
+            <h2 className="text-lg font-semibold text-white">Current Measurements</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             <StatusCard title="CO Concentration" value={sensorData.co} unit="mg/m³" category={prediction.category} />
             <StatusCard title="Nitrogen Dioxide" value={sensorData.co2} unit="ppm" />
             <StatusCard title="Benzene" value={sensorData.pm25} unit="µg/m³" />
@@ -179,38 +188,22 @@ export default function Dashboard() {
             <StatusCard title="Humidity" value={sensorData.humidity} unit="%" />
             <StatusCard title="PM10 Particulates" value={sensorData.pm10} unit="µg/m³" />
           </div>
-        </section>
-
-        {/* Section 3: Forecast & Prediction */}
-        <section className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-lg font-semibold text-white">Forecast & Prediction</h2>
-            <p className="text-xs text-slate-400">Next hour air quality prediction</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <PredictionCard prediction={prediction} currentCO={sensorData.co} />
-            </div>
-            <div />
-          </div>
-        </section>
+        </div>
 
         {/* Section 4: Trend Analysis */}
-        <section className="space-y-4">
-          <div className="space-y-1">
+        <div className="mb-6">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-white">Trend Analysis</h2>
-            <p className="text-xs text-slate-400">Actual vs predicted CO levels over time</p>
           </div>
           <COTimeSeriesChart data={historicalData} />
-        </section>
+        </div>
 
         {/* Section 5: Model Performance */}
-        <section className="space-y-4">
-          <div className="space-y-1">
+        <div className="mb-6">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-white">Model Performance</h2>
-            <p className="text-xs text-slate-400">ML model metrics and accuracy analysis</p>
           </div>
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             <MetricsCard
               title="XGBoost Regressor Performance"
               metrics={[
@@ -222,31 +215,29 @@ export default function Dashboard() {
             />
             {categoryDistribution && <CategoryDistributionChart data={categoryDistribution} />}
           </div>
-        </section>
+        </div>
 
         {/* Section 6: Feature Importance & Accuracy */}
-        <section className="space-y-4">
-          <div className="space-y-1">
+        <div className="mb-6">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-white">ML Insights</h2>
-            <p className="text-xs text-slate-400">Feature importance and prediction accuracy</p>
           </div>
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2">
             <FeatureImportanceChart data={features} />
             <ScatterPlotChart data={historicalData} />
           </div>
-        </section>
+        </div>
 
         {/* Section 7: Health Recommendations */}
-        <section className="space-y-4">
-          <div className="space-y-1">
+        <div className="mb-6">
+          <div className="mb-4">
             <h2 className="text-lg font-semibold text-white">Health & Safety Guidance</h2>
-            <p className="text-xs text-slate-400">Personalized recommendations based on current air quality</p>
           </div>
           <Recommendations category={prediction.category} sensorData={sensorData} />
-        </section>
+        </div>
 
         {/* Footer */}
-        <footer className="rounded-lg border border-slate-800 bg-slate-900/30 p-6 text-center">
+        <footer className="rounded-lg border border-slate-800 bg-slate-900/30 p-5 text-center">
           <p className="text-xs text-slate-500">
             Last updated: {lastUpdate.toLocaleString()} • Models: XGBoost + Random Forest • 
             Data source: UCI Air Quality Dataset • Dashboard v2.0

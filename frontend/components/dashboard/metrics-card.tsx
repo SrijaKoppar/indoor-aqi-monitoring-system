@@ -11,19 +11,19 @@ interface MetricsCardProps {
 
 export function MetricsCard({ title, metrics }: MetricsCardProps) {
   return (
-    <Card className="border-0 shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6">
-        <h3 className="mb-4 text-sm font-semibold text-slate-300 uppercase tracking-wider">
+    <Card className="border-0 shadow-lg overflow-hidden h-full">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-5">
+        <h3 className="mb-3 text-sm font-semibold text-slate-300 uppercase tracking-wider">
           {title}
         </h3>
         
-        <div className="h-px bg-slate-700 mb-6" />
+        <div className="h-px bg-slate-700 mb-4" />
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {metrics.map((metric, idx) => (
             <div
               key={idx}
-              className="flex items-center justify-between p-3 rounded-lg bg-slate-700/20 hover:bg-slate-700/30 transition-colors"
+              className="flex items-center justify-between p-2.5 rounded-lg bg-slate-700/20 hover:bg-slate-700/30 transition-colors"
             >
               <span className="text-xs text-slate-400 uppercase tracking-wider">
                 {metric.label}

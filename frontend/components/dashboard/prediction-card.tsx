@@ -32,12 +32,12 @@ export function PredictionCard({ prediction, currentCO }: PredictionCardProps) {
   const trend = getTrendIndicator(currentCO, prediction.nextHourCO);
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg">
-      <div className={`bg-gradient-to-br ${categoryBgGradient[prediction.category]} p-8`}>
-        <div className="space-y-6">
+    <Card className="overflow-hidden border-0 shadow-lg h-full">
+      <div className={`bg-gradient-to-br ${categoryBgGradient[prediction.category]} p-6`}>
+        <div className="space-y-5">
           {/* Header */}
-          <div>
-            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-2">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold text-white/80 uppercase tracking-wider">
               Next Hour Forecast
             </h3>
             <p className="text-3xl font-bold text-white">
@@ -52,15 +52,15 @@ export function PredictionCard({ prediction, currentCO }: PredictionCardProps) {
           <div className="h-px bg-white/20" />
 
           {/* Stats Grid */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg bg-black/15 p-4 backdrop-blur-sm">
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between rounded-lg bg-black/15 p-3.5 backdrop-blur-sm">
               <span className="text-sm text-white/80">CO Level</span>
               <span className="text-lg font-bold text-white">
                 {prediction.nextHourCO.toFixed(2)} mg/m³
               </span>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-black/15 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between rounded-lg bg-black/15 p-3.5 backdrop-blur-sm">
               <span className="text-sm text-white/80">Trend</span>
               <div className="flex items-center gap-2">
                 <span className="text-lg">{trend.emoji}</span>
@@ -70,7 +70,7 @@ export function PredictionCard({ prediction, currentCO }: PredictionCardProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-black/15 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between rounded-lg bg-black/15 p-3.5 backdrop-blur-sm">
               <span className="text-sm text-white/80">Confidence</span>
               <span className="text-lg font-bold text-white">
                 {(prediction.confidence * 100).toFixed(0)}%

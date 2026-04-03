@@ -29,11 +29,11 @@ const categoryDescriptions: Record<AQICategory, string> = {
 
 export function AQIStatusCard({ category, confidence }: AQIStatusCardProps) {
   return (
-    <Card className="overflow-hidden border-0 shadow-2xl">
-      <div className={`bg-gradient-to-br ${categoryColors[category]} p-8`}>
-        <div className="space-y-6">
+    <Card className="overflow-hidden border-0 shadow-2xl h-full">
+      <div className={`bg-gradient-to-br ${categoryColors[category]} p-6`}>
+        <div className="space-y-5">
           {/* Header */}
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <h3 className="text-sm font-semibold text-white/80 tracking-wider">
               CURRENT AIR QUALITY STATUS
             </h3>
@@ -51,7 +51,7 @@ export function AQIStatusCard({ category, confidence }: AQIStatusCardProps) {
           <div className="h-px bg-white/20" />
 
           {/* Stats */}
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <p className="text-xs text-white/70 font-medium uppercase tracking-wide">Model Confidence</p>
               <p className="text-3xl font-bold text-white">

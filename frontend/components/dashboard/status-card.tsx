@@ -31,11 +31,11 @@ export function StatusCard({
   icon,
 }: StatusCardProps) {
   return (
-    <Card className="overflow-hidden border border-slate-700 shadow-lg hover:border-slate-600 hover:shadow-xl transition-all duration-300">
-      <div className="bg-slate-900/50 backdrop-blur-sm p-6">
-        <div className="flex items-start justify-between mb-4">
+    <Card className="overflow-hidden border border-slate-700 shadow-lg hover:border-slate-600 hover:shadow-xl transition-all duration-300 h-full">
+      <div className="bg-slate-900/50 backdrop-blur-sm p-5">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
               {title}
             </p>
             <div className="flex items-baseline gap-2">
@@ -49,7 +49,7 @@ export function StatusCard({
         </div>
 
         {category && (
-          <div className="flex items-center gap-2 pt-4 border-t border-slate-700">
+          <div className="flex items-center gap-2 pt-3 border-t border-slate-700">
             <div
               className={`h-2 w-2 rounded-full ${categoryColors[category]}`}
             />

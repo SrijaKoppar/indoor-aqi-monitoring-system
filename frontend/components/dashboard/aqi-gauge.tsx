@@ -25,19 +25,19 @@ export function AQIGauge({ category, confidence }: AQIGaugeProps) {
   const currentIndex = categoryOrder.indexOf(category);
 
   return (
-    <Card className="border-0 shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6">
-        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4">
+    <Card className="border-0 shadow-lg overflow-hidden h-full">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-5">
+        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-3.5">
           Air Quality Index
         </h3>
 
         {/* Gauge Bars */}
-        <div className="space-y-3 mb-6">
-          <div className="flex gap-2">
+        <div className="space-y-2.5 mb-4">
+          <div className="flex gap-1.5">
             {categoryOrder.map((cat, idx) => (
               <div
                 key={cat}
-                className={`flex-1 h-10 rounded-lg transition-all duration-500 ${
+                className={`flex-1 h-9 rounded-lg transition-all duration-500 ${
                   idx <= currentIndex
                     ? `${categoryColors[cat]}`
                     : 'bg-slate-700/40'
@@ -56,7 +56,7 @@ export function AQIGauge({ category, confidence }: AQIGaugeProps) {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-slate-700 mb-6" />
+        <div className="h-px bg-slate-700 mb-4" />
 
         {/* Confidence Display */}
         <div className="text-center">
@@ -66,7 +66,7 @@ export function AQIGauge({ category, confidence }: AQIGaugeProps) {
           <p className="text-2xl font-bold text-cyan-400">
             {(confidence * 100).toFixed(0)}%
           </p>
-          <div className="mt-3 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div className="mt-2.5 h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400"
               style={{ width: `${confidence * 100}%` }}
