@@ -22,6 +22,7 @@ import {
   getMockCategoryDistribution,
 } from '@/lib/mock-data';
 import { SensorData, Prediction, ModelMetrics, FeatureImportance, HistoricalData } from '@/lib/types';
+import { getLatestReading } from "@/lib/api-client";
 
 export default function Dashboard() {
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
@@ -32,6 +33,20 @@ export default function Dashboard() {
   const [categoryDistribution, setCategoryDistribution] = useState(null);
   const [backendAvailable, setBackendAvailable] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    // Fetch immediately on load
+    getLatestReading().then(setData);
+
+    // Then poll every 5 seconds
+    const interval = setInterval(() => {
+      getLatestReading().then(setData);
+    }, 2000);
+
+    // Cleanup on unmount
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
